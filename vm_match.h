@@ -1,7 +1,8 @@
-#pragma once
+﻿#pragma once
 
 #include <opencv2/opencv.hpp>
-#include <cstdint>
+
+#include "vm_type.h"
 
 namespace vm_match
 {
@@ -9,7 +10,7 @@ namespace vm_match
 
 	void do_match();
 
-	bool frame_cmp(const cv::Mat& frame_1, const cv::Mat& frame_2);
+	/*bool frame_cmp(const cv::Mat& frame_1, const cv::Mat& frame_2);
 
-	double compare_ssim(const cv::Mat& frame_1, const cv::Mat& frame_2);
+	double compare_ssim(const cv::Mat& frame_1, const cv::Mat& frame_2);*/
 }

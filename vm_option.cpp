@@ -1,4 +1,4 @@
-#include "vm_option.h"
+﻿#include "vm_option.h"
 
 #include <format>
 #include <cstdlib>
@@ -12,6 +12,8 @@ namespace vm_option
     output_type_enum output_type = output_type_enum::framenum;
     uint16_t frame_scale = 1, frame_backward = 24;
     double ssim_threshold = 0.995;
+    int16_t frame_buffer_size = -1;
+    bool benchmark;
 
     cv::VideoCapture video_cap_1, video_cap_2;
     uint32_t frame_count_1, frame_count_2, new_width, new_height;
@@ -23,7 +25,8 @@ namespace vm_option
                 std::exit(EXIT_SUCCESS);
             }
                 if(arg == "-h" || arg == "-help"){
-                    vm_log::output(std::format(R"({0} v{1} help:
+                    vm_log::output(std::format(
+R"({0} v{1} help:
 Program info:
     -h/-help
         print help
@@ -48,7 +51,7 @@ Output options:
     -log <string>
         set the path of log file
         required that -type is not nooutput
-        if it is None, no output file
+        if it is empty, no output file
         default: "{3}"
 
 Filter options:
@@ -65,7 +68,24 @@ Accuracy options:
     -backward <int 1..65535>
         maximum additional frames to compare if no matching frames can be found
         default: {6}
-)", PROGRAM_NAME, VERSION, (int)output_type, log_path, ssim_threshold, frame_scale, frame_backward));
+
+Performance options:
+    -benchmark
+        output running time (ms)
+
+    -buffer <int 1..32767>
+        manually set frame_buffer size
+        do not set the -buffer too large, or your memory will bomb
+        case -1: auto: -buffer = -backward>32766 ? 32767 : -backward+1
+        case 0: close frame_buffer
+        default: {7}
+)", PROGRAM_NAME, VERSION,
+std::invoke(
+    []()->std::string{switch(output_type){
+        case vm_option::output_type_enum::nooutput:return "nooutput";
+        case vm_option::output_type_enum::framenum: return "framenum";
+                    }}),
+log_path, ssim_threshold, frame_scale, frame_backward, frame_buffer_size));
                     std::exit(EXIT_SUCCESS);
                 }
 		}
@@ -90,9 +110,13 @@ Accuracy options:
                 frame_scale = std::stoi(args[i+1]);
             if(args[i]=="-backward")
                 frame_backward = std::stoi(args[i+1]);
+            if(args[i]=="-buffer")
+                frame_buffer_size = std::stoi(args[i+1]);
+            if(args[i]=="-benchmark")
+                benchmark = true;
         }
 
-        // У��
+        // 视频校验
         if(input_video_path_1.empty())
             vm_log::errore("no input -i1");
         if(input_video_path_2.empty())
@@ -109,6 +133,7 @@ Accuracy options:
            video_cap_1.get(cv::CAP_PROP_FRAME_HEIGHT)!=video_cap_2.get(cv::CAP_PROP_FRAME_HEIGHT))
             vm_log::errore("the two videos have different widths or heights");
 
+        // 参数校验
         if(ssim_threshold<=0 || ssim_threshold>1)
             vm_log::errore(std::format("-scale {0} out of range", ssim_threshold));
 
@@ -118,10 +143,27 @@ Accuracy options:
         if(frame_backward==0)
             vm_log::errore(std::format("-backward {0} out of range", frame_backward));
 
-        // ��ֵ
-        frame_count_1 = (uint32_t)video_cap_1.get(cv::CAP_PROP_FRAME_COUNT);
-        frame_count_2 = (uint32_t)video_cap_2.get(cv::CAP_PROP_FRAME_COUNT);
-        new_width = (uint32_t)video_cap_1.get(cv::CAP_PROP_FRAME_WIDTH) / frame_scale;
-        new_height = (uint32_t)video_cap_1.get(cv::CAP_PROP_FRAME_HEIGHT) / frame_scale;
+        if(frame_buffer_size<-1)
+            vm_log::errore(std::format("-buffer {0} out of range", frame_buffer_size));
+
+        // 新值
+        frame_count_1 = (fnum)video_cap_1.get(cv::CAP_PROP_FRAME_COUNT);
+        frame_count_2 = (fnum)video_cap_2.get(cv::CAP_PROP_FRAME_COUNT);
+        if(frame_count_1 != frame_count_2)
+            vm_log::warning(std::format("the two videos have different frames: {0}f {1}f", frame_count_1, frame_count_2));
+        video_cap_1.set(cv::CAP_PROP_POS_FRAMES, frame_count_1-1);
+        video_cap_2.set(cv::CAP_PROP_POS_FRAMES, frame_count_2-1);
+        if(!video_cap_1.grab())
+            vm_log::errore(std::format("-input1 video packaging error, can not read frame {0}", frame_count_1-1));
+        if(!video_cap_2.grab())
+            vm_log::errore(std::format("-input2 video packaging error, can not read frame {0}", frame_count_2-1));
+
+        double fps1 = video_cap_1.get(cv::CAP_PROP_FPS), fps2 = video_cap_2.get(cv::CAP_PROP_FPS);
+        if(fps1 != fps2)
+            vm_log::warning(std::format("the two videos have different fps: {0}fps {1}fps", fps1, fps2));
+
+        new_width = (fnum)video_cap_1.get(cv::CAP_PROP_FRAME_WIDTH) / frame_scale;
+        new_height = (fnum)video_cap_1.get(cv::CAP_PROP_FRAME_HEIGHT) / frame_scale;
+        frame_buffer_size = frame_backward>32766 ? 32767 : frame_backward+1;
 	}
 }
