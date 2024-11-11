@@ -23,7 +23,7 @@ namespace vm_option
 
     std::string _get_output_type_string(){
         switch(output_type){
-            case vm_option::output_type_enum::nooutput:return "nooutput";
+            case vm_option::output_type_enum::nooutput: return "nooutput";
             case vm_option::output_type_enum::framenum: return "framenum";
         }
     }
