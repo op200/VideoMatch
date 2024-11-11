@@ -10,22 +10,33 @@
 
 namespace vm_match
 {
-	int32_t* match_frame_list;
+	fnum* match_frame_list;
 	std::map<fnum, cv::Mat> frame_buffer_map;
 	fnum frame_buffer_back, frame_read_pos;
 	fnum video_frame_num_1, video_frame_num_2;
 
 	bool _read_frame(cv::Mat& frame_2, cv::Mat& frame_2_resize){
 		bool isread = vm_option::video_cap_2.read(frame_2);
+
 		if(vm_option::frame_scale != 1){
 			cv::resize(frame_2, frame_2_resize,
 					   cv::Size(vm_option::new_width, vm_option::new_height),
 					   0, 0, cv::INTER_NEAREST);
 		}
+		else
+			frame_2_resize = frame_2;
+
+		if(vm_option::debug && frame_2_resize.empty())
+			vm_log::error("vm_match::_read_frame(cv::Mat& frame_2, cv::Mat& frame_2_resize): read an empty frame in video 2");
+
 		return isread;
 	}
 	bool _read_frame(cv::Mat& frame_2){
 		bool isread = vm_option::video_cap_2.read(frame_2);
+
+		if(vm_option::debug && frame_2.empty())
+			vm_log::error("vm_match::_read_frame(cv::Mat& frame_2): read an empty frame in video 2");
+
 		if(vm_option::frame_scale != 1){
 			cv::Mat frame_2_resize;
 			cv::resize(frame_2, frame_2_resize,
@@ -35,14 +46,22 @@ namespace vm_match
 		}
 		return isread;
 	}
-	bool _read_frame(cv::VideoCapture cap, cv::Mat& frame_2){
-		bool isread = cap.read(frame_2);
+	bool _read_frame(cv::VideoCapture& cap, cv::Mat& frame){
+		bool isread = cap.read(frame);
+
+		if(vm_option::debug && frame.empty()){
+			uint8_t cap_num = 1;
+			if(&cap == &vm_option::video_cap_2)
+				cap_num = 2;
+			vm_log::error(std::format("vm_match::_read_frame(cv::VideoCapture& cap, cv::Mat& frame): read an empty frame in video {0}", cap_num));
+		}
+
 		if(vm_option::frame_scale != 1){
-			cv::Mat frame_2_resize;
-			cv::resize(frame_2, frame_2_resize,
+			cv::Mat frame_resize;
+			cv::resize(frame, frame_resize,
 					   cv::Size(vm_option::new_width, vm_option::new_height),
 					   0, 0, cv::INTER_NEAREST);
-			frame_2 = frame_2_resize;
+			frame = frame_resize;
 		}
 		return isread;
 	}
@@ -50,11 +69,16 @@ namespace vm_match
 	void _get_new_buffer(){
 		frame_buffer_map.clear();
 		vm_option::video_cap_2.set(cv::CAP_PROP_POS_FRAMES, video_frame_num_2);
-		for(fnum i=video_frame_num_2;
-			i<video_frame_num_2+vm_option::frame_buffer_size && i<vm_option::frame_count_2;
+		for(fnum i = video_frame_num_2;
+			i < video_frame_num_2 + vm_option::frame_buffer_size && i < vm_option::frame_count_2;
 			++i){
 			cv::Mat frame;
 			_read_frame(frame, frame_buffer_map[i]);
+
+			if(vm_option::debug && frame.empty())
+				vm_log::error(std::format("vm_match::_get_new_buffer: The frame is empty: frame num {0} in video 2", i));
+			if(vm_option::debug && frame_buffer_map[i].empty())
+				vm_log::error(std::format("vm_match::_get_new_buffer: The frame is empty: frame num {0} in video 2 buffer", i));
 		}
 		frame_read_pos = std::min(video_frame_num_2+vm_option::frame_buffer_size, vm_option::frame_count_2);
 		frame_buffer_back = frame_read_pos - 1;
@@ -83,6 +107,10 @@ namespace vm_match
 		}
 		else{
 			frame_2 = frame_buffer_map[frame_num];
+
+			if(vm_option::debug && frame_2.empty())
+				vm_log::error(std::format("vm_match::_get_frame_2: The frame is empty: frame num {0} in video 2 buffer", frame_num));
+
 			return true;
 		}
 	}
@@ -93,7 +121,7 @@ namespace vm_match
 		cv::cvtColor(frame_2, frame_2_gray, cv::COLOR_BGR2GRAY);
 
 		cv::Mat validImage1, validImage2;
-		frame_1_gray.convertTo(validImage1, CV_32F); //数据类型转换为 float,防止后续计算出现错误
+		frame_1_gray.convertTo(validImage1, CV_32F); //数据类型转换为 float, 防止后续计算出现错误
 		frame_2_gray.convertTo(validImage2, CV_32F);
 
 		cv::Mat image1_1 = validImage1.mul(validImage1); //图像乘积
@@ -129,7 +157,7 @@ namespace vm_match
 	}
 
 	void do_match(){
-		match_frame_list = new int32_t[vm_option::frame_count_1];
+		match_frame_list = new fnum[vm_option::frame_count_1];
 		video_frame_num_1 = video_frame_num_2 = 0;
 		cv::Mat frame_1, frame_2;
 
@@ -140,7 +168,9 @@ namespace vm_match
 		// 读取并对比
 		vm_option::video_cap_1.set(cv::CAP_PROP_POS_FRAMES, 0);
 		for(; video_frame_num_1 < vm_option::frame_count_1; ++video_frame_num_1){
-			_read_frame(vm_option::video_cap_1, frame_1);
+			bool isread = _read_frame(vm_option::video_cap_1, frame_1);
+			if(!isread)
+				vm_log::error(std::format(R"(vm_match::do_match: Can not read a frame: frame num {0} in video 1)", video_frame_num_1));
 
 			if(!vm_option::frame_buffer_size)
 				vm_option::video_cap_2.set(cv::CAP_PROP_POS_FRAMES, video_frame_num_2);
@@ -149,17 +179,34 @@ namespace vm_match
 				i <= video_frame_num_2+vm_option::frame_backward && i < vm_option::frame_count_2;
 				++i){
 				bool isread = _get_frame_2(frame_2, i);
-				if(!isread)vm_log::error(video_frame_num_1+" "+video_frame_num_2);
-				if(frame_cmp(frame_1, frame_2)){
-					match_frame_list[video_frame_num_1] = i;
-					video_frame_num_2 = i+1;
-					is_not_finded = false;
-					break;
+				if(!isread)
+					vm_log::error(std::format(R"(vm_match::do_match: Can not read a frame: frame num {0} in video 2)", i));
+
+				if(vm_option::debug){
+					if(frame_1.empty())
+						vm_log::error(std::format(R"(vm_match::do_match: The frame is empty: frame num {0} in video {1})", video_frame_num_1, 1));
+					if(frame_2.empty())
+						vm_log::error(std::format(R"(vm_match::do_match: The frame is empty: frame num {0} in video {1})", i, 2));
+					if(!frame_1.empty()&&!frame_2.empty()&&
+					   frame_cmp(frame_1, frame_2)){
+						match_frame_list[video_frame_num_1] = i;
+						video_frame_num_2 = i+1;
+						is_not_finded = false;
+						break;
+					}
 				}
+				else
+					if(frame_cmp(frame_1, frame_2)){
+						match_frame_list[video_frame_num_1] = i;
+						video_frame_num_2 = i+1;
+						is_not_finded = false;
+						break;
+					}
 			}
 			if(is_not_finded)
-				match_frame_list[video_frame_num_1] = -1, ++video_frame_num_2;
-			vm_log::change_title(std::format(R"({0} / {1})", video_frame_num_1, vm_option::frame_count_1));
+				match_frame_list[video_frame_num_1] = -1,
+				++video_frame_num_2;
+			vm_log::change_title(std::format(R"({0} / {1})", video_frame_num_1, vm_option::frame_count_1-1));
 		}
 
 		vm_option::video_cap_1.release();

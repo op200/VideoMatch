@@ -6,7 +6,7 @@
 
 namespace vm_match
 {
-	extern int32_t* match_frame_list;
+	extern fnum* match_frame_list;
 
 	void do_match();
 
