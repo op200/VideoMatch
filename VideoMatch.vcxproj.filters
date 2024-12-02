@@ -21,10 +21,22 @@
     <ClCompile Include="vm_log.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="vm_option.cpp">
+    <ClCompile Include="vm_option_cv.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="vm_match.cpp">
+    <ClCompile Include="vm_match_cv.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="vm_option_ff.h">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="vm_option_ff.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="vm_match_ff.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="vm_output.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -32,16 +44,22 @@
     <ClInclude Include="vm_log.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="vm_option.h">
+    <ClInclude Include="vm_option_cv.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="vm_version.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="vm_match.h">
+    <ClInclude Include="vm_match_cv.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="vm_type.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vm_match_ff.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vm_output.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

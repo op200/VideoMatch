@@ -1,4 +1,4 @@
-﻿#include "vm_option.h"
+﻿#include "vm_option_cv.h"
 
 #include <format>
 #include <cstdlib>
@@ -6,13 +6,13 @@
 #include "vm_version.h"
 #include "vm_log.h"
 
-namespace vm_option
+namespace vm_option_cv
 {
     std::string input_video_path_1, input_video_path_2, log_path;
     output_type_enum output_type = output_type_enum::framenum;
-    uint16_t frame_scale = 1, frame_backward = 24;
+    uint16_t frame_scale = 1;
     double ssim_threshold = 0.995;
-    int16_t frame_buffer_size = -1;
+    int16_t frame_buffer_size = -1, frame_forward = 24;
     bool benchmark = false, debug = false;
     cv::VideoCaptureAPIs decoder = cv::CAP_FFMPEG;
     cv::VideoAccelerationType hwaccel = cv::VIDEO_ACCELERATION_NONE;
@@ -23,20 +23,22 @@ namespace vm_option
 
     std::string _get_output_type_string(){
         switch(output_type){
-            case vm_option::output_type_enum::nooutput: return "nooutput";
-            case vm_option::output_type_enum::framenum: return "framenum";
+            case output_type_enum::nooutput: return "nooutput";
+            case output_type_enum::framenum: return "framenum";
         }
     }
 
 	void get_option(std::vector<std::string>& args){
-		for(std::string arg : args){
-            if(arg == "-v" || arg == "-version"){
-                vm_log::output(std::format("{0}\nVersion: {1}\n{2}", PROGRAM_NAME, VERSION, HOME_LINK));
+        std::string version_info = std::format("{0}\nVersion: {1}\n{2}\nOpenCV: {3}", PROGRAM_NAME, VERSION, HOME_LINK, CV_VERSION);
+        for(std::string arg : args){
+            if(arg=="-v" || arg=="-version"){
+                vm_log::output(version_info);
                 std::exit(EXIT_SUCCESS);
             }
-                if(arg == "-h" || arg == "-help"){
+                if(arg=="-h" || arg=="-help"){
                     vm_log::output(std::format(
-R"({0} v{1} help:
+R"({0}
+
 Program info:
     -h/-help
         Print help
@@ -56,28 +58,28 @@ Output options:
         Set the output type
         Nooutput: no output
         Framenum: output the number of matching frames
-        Default: "{2}"
+        Default: "{1}"
 
     -log <string>
         Set the path of log file
         Required that -type is not nooutput
         If it is empty, no output file
-        Default: "{3}"
+        Default: "{2}"
 
 Filter options:
     -th/-threshold <float 0..1.0>
         Set the ssim_threshold value
-        Default: {4}
+        Default: {3}
 
 Accuracy options:
     -scale <int 1..65535>
         Scaling images for comparison
         e.g. -scale 2 == 0.5x
-        Default: {5}
+        Default: {4}
 
-    -backward <int 1..65535>
+    -forward <int 1..32766>
         Maximum additional frames to compare if no matching frames can be found
-        Default: {6}
+        Default: {5}
 
 Performance options:
     -benchmark
@@ -86,9 +88,9 @@ Performance options:
     -buffer <int -1..32767>
         Manually set frame_buffer size
         Do not set the -buffer too large, or your memory will bomb
-        case -1: auto: -buffer = -backward>32766 ? 32767 : -backward+1
+        case -1: auto: -buffer = -forward + 1
         case 0: close frame_buffer
-        Default: {7}
+        Default: {6}
 
     -de/-decoder <int>
         Select decoder (OpenCV API)
@@ -144,9 +146,9 @@ Debug options:
     -debug
         Output debug messages on the command line
         Will not be terminated when certain errors occurs
-)", PROGRAM_NAME, VERSION,
+)", version_info,
 _get_output_type_string(),
-log_path, ssim_threshold, frame_scale, frame_backward, frame_buffer_size));
+log_path, ssim_threshold, frame_scale, frame_forward, frame_buffer_size));
                     std::exit(EXIT_SUCCESS);
                 }
 		}
@@ -169,8 +171,8 @@ log_path, ssim_threshold, frame_scale, frame_backward, frame_buffer_size));
                 ssim_threshold = std::stod(args[i+1]);
             if(args[i]=="-scale")
                 frame_scale = std::stoi(args[i+1]);
-            if(args[i]=="-backward")
-                frame_backward = std::stoi(args[i+1]);
+            if(args[i]=="-forward")
+                frame_forward = std::stoi(args[i+1]);
             if(args[i]=="-buffer")
                 frame_buffer_size = std::stoi(args[i+1]);
             if(args[i]=="-benchmark")
@@ -206,46 +208,46 @@ log_path, ssim_threshold, frame_scale, frame_backward, frame_buffer_size));
                                        video_cap_2.get(cv::CAP_PROP_FRAME_WIDTH), video_cap_2.get(cv::CAP_PROP_FRAME_HEIGHT)));
 
         // 参数校验
-        if(ssim_threshold<=0 || ssim_threshold>1)
+        if(ssim_threshold<0 || ssim_threshold>1)
             vm_log::errore(std::format("-scale {0} out of range", ssim_threshold));
 
-        if(frame_scale==0)
+        if(frame_scale == 0)
             vm_log::errore(std::format("-scale {0} out of range", frame_scale));
 
-        if(frame_backward==0)
-            vm_log::errore(std::format("-backward {0} out of range", frame_backward));
+        if(frame_forward == 0 || frame_forward == 32767)
+            vm_log::errore(std::format("-forward {0} out of range", frame_forward));
 
-        if(frame_buffer_size<-1)
+        if(frame_buffer_size < -1)
             vm_log::errore(std::format("-buffer {0} out of range", frame_buffer_size));
+        else if(frame_buffer_size == -1)
+            frame_buffer_size = frame_forward+1;
 
         // 新值
         frame_count_1 = static_cast<fnum>(video_cap_1.get(cv::CAP_PROP_FRAME_COUNT));
         frame_count_2 = static_cast<fnum>(video_cap_2.get(cv::CAP_PROP_FRAME_COUNT));
         if(frame_count_1 != frame_count_2)
-            vm_log::warning(std::format("The two videos have different frames: {0}f {1}f", frame_count_1, frame_count_2));
+            vm_log::warning(std::format("The two videos have different frame counts: {0} F {1} F", frame_count_1, frame_count_2));
         video_cap_1.set(cv::CAP_PROP_POS_FRAMES, frame_count_1-1);
         video_cap_2.set(cv::CAP_PROP_POS_FRAMES, frame_count_2-1);
         if(!video_cap_1.grab())
-            vm_log::errore(std::format("Video 1 packaging error, can not read frame {0}", frame_count_1-1));
+            vm_log::errore(std::format("Video 1 container error, can not read frame {0}", frame_count_1-1));
         if(!video_cap_2.grab())
-            vm_log::errore(std::format("Video 2 packaging error, can not read frame {0}", frame_count_2-1));
+            vm_log::errore(std::format("Video 2 container error, can not read frame {0}", frame_count_2-1));
 
         double fps1 = video_cap_1.get(cv::CAP_PROP_FPS), fps2 = video_cap_2.get(cv::CAP_PROP_FPS);
         if(fps1 != fps2)
-            vm_log::warning(std::format("The two videos have different fps: {0}fps {1}fps", fps1, fps2));
+            vm_log::warning(std::format("The two videos have different FPS: {0} FPS & {1} FPS", fps1, fps2));
 
-        new_width = static_cast<fnum>(video_cap_1.get(cv::CAP_PROP_FRAME_WIDTH)) / frame_scale;
-        new_height = static_cast<fnum>(video_cap_1.get(cv::CAP_PROP_FRAME_HEIGHT)) / frame_scale;
+        new_width = static_cast<uint32_t>(video_cap_1.get(cv::CAP_PROP_FRAME_WIDTH)) / frame_scale;
+        new_height = static_cast<uint32_t>(video_cap_1.get(cv::CAP_PROP_FRAME_HEIGHT)) / frame_scale;
 
-        if(frame_buffer_size == -1)
-            frame_buffer_size = frame_backward>32766 ? 32767 : frame_backward+1;
 
 
         if(debug)
-            vm_log::info(std::format(R"("{0}" -i1 "{1}" -i2 "{2}" -t {3} -log {4} -th {5} -scale {6} -backward {7} {8}-buffer {9} -de {10} -hw {11} {12})",
+            vm_log::info(std::format(R"("{0}" -i1 "{1}" -i2 "{2}" -t {3} -log {4} -th {5} -scale {6} -forward {7} {8}-buffer {9} -de {10} -hw {11} {12} -c cv)",
                                      args[0], input_video_path_1, input_video_path_2,
                                      _get_output_type_string(),
-                                     log_path, ssim_threshold, frame_scale, frame_backward,
+                                     log_path, ssim_threshold, frame_scale, frame_forward,
                                      benchmark ? "-benchmark " : "",
                                      frame_buffer_size,
                                      static_cast<uint32_t>(decoder), static_cast<uint32_t>(hwaccel),

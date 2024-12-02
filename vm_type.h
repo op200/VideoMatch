@@ -2,4 +2,8 @@
 
 #include <cstdint>
 
-using fnum = uint32_t;
+using fnum = int32_t;
+
+enum class codec_type{
+	ffmpeg, opencv
+};

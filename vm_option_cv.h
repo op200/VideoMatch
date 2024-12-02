@@ -6,7 +6,7 @@
 
 #include "vm_type.h"
 
-namespace vm_option
+namespace vm_option_cv
 {
 	enum class output_type_enum{
 		nooutput, framenum
@@ -14,9 +14,9 @@ namespace vm_option
 
 	extern std::string input_video_path_1, input_video_path_2, log_path;
 	extern output_type_enum output_type;
-	extern uint16_t frame_scale, frame_backward;
+	extern uint16_t frame_scale;
 	extern double ssim_threshold;
-	extern int16_t frame_buffer_size;
+	extern int16_t frame_buffer_size, frame_forward;
 	extern bool benchmark, debug;
 	extern cv::VideoCaptureAPIs decoder;
 	extern cv::VideoAccelerationType hwaccel;

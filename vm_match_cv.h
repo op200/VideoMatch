@@ -4,7 +4,7 @@
 
 #include "vm_type.h"
 
-namespace vm_match
+namespace vm_match_cv
 {
 	extern fnum* match_frame_list;
 

@@ -129,27 +129,33 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>.\opencv4100\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\ffmpeg-7.1-full_build-shared\include;.\opencv4100\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>.\opencv4100\build\x64\vc16\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_world4100.lib;opencv_world4100d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>.\ffmpeg-7.1-full_build-shared\lib;.\opencv4100\build\x64\vc16\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_world4100.lib;opencv_world4100d.lib;avcodec.lib;avfilter.lib;avformat.lib;swscale.lib;avutil.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="vm_log.cpp" />
     <ClCompile Include="videomatch.cpp" />
-    <ClCompile Include="vm_match.cpp" />
-    <ClCompile Include="vm_option.cpp" />
+    <ClCompile Include="vm_match_cv.cpp" />
+    <ClCompile Include="vm_match_ff.cpp" />
+    <ClCompile Include="vm_option_cv.cpp" />
+    <ClCompile Include="vm_option_ff.cpp" />
+    <ClCompile Include="vm_option_ff.h" />
+    <ClCompile Include="vm_output.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vm_log.h" />
-    <ClInclude Include="vm_match.h" />
-    <ClInclude Include="vm_option.h" />
+    <ClInclude Include="vm_match_cv.h" />
+    <ClInclude Include="vm_match_ff.h" />
+    <ClInclude Include="vm_option_cv.h" />
+    <ClInclude Include="vm_output.h" />
     <ClInclude Include="vm_type.h" />
     <ClInclude Include="vm_version.h" />
   </ItemGroup>
