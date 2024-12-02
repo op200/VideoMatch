@@ -3,7 +3,7 @@
 ### v0.5
 将重心转移到ffmpeg api的使用上，经过测试，使用ffmpeg比opencv快非常多
 
-opencv仍可以使用，用选项切换即可，需要同目录下有相应dll，releases的包中将不再放opencv的dll
+opencv仍可以使用，用选项切换即可，需要同目录下有相应dll，releases的包中将不再放opencv的dll，如果需要使用opencv，你可以下载之前版本的包，那里有dll
 
 这一版本增加了很多功能，其中包括对比前面的未匹配帧，原本只会匹配后面的帧，不过这个功能目前没在opencv模式中加入
 
