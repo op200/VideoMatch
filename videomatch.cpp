@@ -12,6 +12,8 @@
 int main(int argc, char* argv[]){
 	// get options
 	std::vector<std::string> args(argv, argv + argc);
+	if(args.size() == 1)
+		args.push_back("-h");
 	codec_type codec = codec_type::ffmpeg;
 	for(int i = 0; i < args.size(); ++i){
 		if(args[i]=="-c" || args[i]=="-codec"){
