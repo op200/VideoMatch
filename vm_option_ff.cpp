@@ -41,22 +41,28 @@ namespace vm_option_ff
                 vm_log::output(std::format(
 R"({0}
 
+Switch API:
+    -c / -codec <string>
+        ff / ffmpeg: FFmpeg API
+        cv / opencv: OpenCV API
+        Default: ffmpeg
+
 Program info:
-    -h/-help
+    -h / -help
         Print help
 
-    -v/-version
+    -v / -version
         Print version
 
 Input options:
-    -i1/-input1 <string>
+    -i1 / -input1 <string>
         Input the path of the first video
 
-    -i2/-input2 <string>
+    -i2 / -input2 <string>
         Input the path of the second video
 
 Output options:
-    -t/-type <string>
+    -t / -type <string>
         Set the output type
         Nooutput: no output
         Framenum: output the number of matching frames
@@ -69,7 +75,7 @@ Output options:
         Default: "{2}"
 
 Filter options:
-    -th/-threshold <float 0..1.0>
+    -th / -threshold <float 0..1.0>
         Set the ssim_threshold value
         Default: {3}
 
@@ -87,7 +93,7 @@ Performance options:
     -benchmark
         Output running time (ms)
 
-    -hw/-hwaccel <string>
+    -hw / -hwaccel <string>
         Select the hardware acceleration
 
 Debug options:

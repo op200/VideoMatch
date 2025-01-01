@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# ffmpeg
+ffmpeg-7.1-full_build-shared/doc/
+
 # User-specific files
 *.rsuser
 *.suo

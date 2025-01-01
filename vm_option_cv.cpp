@@ -39,22 +39,28 @@ namespace vm_option_cv
                     vm_log::output(std::format(
 R"({0}
 
+Switch API:
+    -c / -codec <string>
+        ff / ffmpeg: FFmpeg API
+        cv / opencv: OpenCV API
+        Default: ffmpeg
+
 Program info:
-    -h/-help
+    -h / -help
         Print help
 
-    -v/-version
+    -v / -version
         Print version
 
 Input options:
-    -i1/-input1 <string>
+    -i1 / -input1 <string>
         Input the path of the first video
 
-    -i2/-input2 <string>
+    -i2 / -input2 <string>
         Input the path of the second video
 
 Output options:
-    -t/-type <string>
+    -t / -type <string>
         Set the output type
         Nooutput: no output
         Framenum: output the number of matching frames
@@ -67,7 +73,7 @@ Output options:
         Default: "{2}"
 
 Filter options:
-    -th/-threshold <float 0..1.0>
+    -th / -threshold <float 0..1.0>
         Set the ssim_threshold value
         Default: {3}
 
@@ -92,7 +98,7 @@ Performance options:
         case 0: close frame_buffer
         Default: {6}
 
-    -de/-decoder <int>
+    -de / -decoder <int>
         Select decoder (OpenCV API)
         May require additional dll
                0: CAP_ANY
@@ -133,7 +139,7 @@ Performance options:
             2600: CAP_OBSENSOR
         Default: 1900 (CAP_FFMPEG)
 
-    -hw/-hwaccel <int>
+    -hw / -hwaccel <int>
         Select the hardware acceleration (OpenCV API: CAP_PROP_HW_ACCELERATION)
             0: VIDEO_ACCELERATION_NONE
             1: VIDEO_ACCELERATION_ANY
