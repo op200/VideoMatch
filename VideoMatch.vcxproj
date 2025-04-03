@@ -71,8 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\op200\Documents\C++\opencv4100\opencv\build\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\op200\Documents\C++\opencv4100\opencv\build\x64\vc16\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>.\opencv4100\opencv\build\include;$(IncludePath)</IncludePath>
+    <LibraryPath>.\opencv4100\opencv\build\x64\vc16\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -110,13 +110,13 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>C:\Users\op200\Documents\C++\opencv4100\opencv\build\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\opencv4100\opencv\build\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\op200\Documents\C++\opencv4100\opencv\build\x64\vc16\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_world4100.lib;opencv_world4100d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>.\opencv4100\opencv\build\x64\vc16\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>.\opencv4100\build\x64\vc16\lib\opencv_world4100.lib;.\opencv4100\build\x64\vc16\lib\opencv_world4100d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
